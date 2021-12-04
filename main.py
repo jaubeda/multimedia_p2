@@ -177,10 +177,8 @@ for url in url_list:
 
     index_id = index_id + 1
 
-    # test con 10 links
-    if i == 10:
-        print("loop exit")
-        break
+
+
 
 # we use the column imdb link to join both df
 '''scrapped_data = pd.DataFrame({'imdbId': imdb_id,
