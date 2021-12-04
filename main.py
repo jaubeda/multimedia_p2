@@ -105,10 +105,14 @@ for url in url_list:
 
     id = id_list[i]
     title = title_list[i]
+    film_year_excel = title.rpartition('(')[2]
+    film_year_excel = film_year_excel.rpartition(')')[0]
+    film_year_excel = film_year_excel.strip()
+    print("año excel", film_year_excel)
     title = title.rpartition('(')[0]
     title = title.strip()
 
-    # print(i,"  ",url)
+    print(i,"  ",url)
     # print(id)
 
     # recorremos todas las url
@@ -129,11 +133,14 @@ for url in url_list:
 
     # scrape the year
     film_year = page_html.find('li', attrs = {"data-testid":"title-details-releasedate"})
-    film_year = film_year.find("a", class_ = "ipc-metadata-list-item__list-content-item ipc-metadata-list-item__list-content-item--link")
-    film_year = film_year.text
-    film_year = film_year.rpartition(',')[2]
-    film_year = film_year.rpartition('(')[0]
-    film_year = film_year.strip()
+    if film_year is not None:
+        film_year = film_year.find("a", class_ = "ipc-metadata-list-item__list-content-item ipc-metadata-list-item__list-content-item--link")
+        film_year = film_year.text
+        film_year = film_year.rpartition(',')[2]
+        film_year = film_year.rpartition('(')[0]
+        film_year = film_year.strip()
+    else:
+        film_year = film_year_excel
     
     # production_year.append(film_year)
 
@@ -150,7 +157,7 @@ for url in url_list:
     film_actors = page_html.find_all("a", attrs ={"data-testid":"title-cast-item__actor"})
     for actor in film_actors:
         temp_actors.append(actor.text)
-    print(temp_actors)
+
     # actors.append(temp_actors)
 
     # scrape the locations
