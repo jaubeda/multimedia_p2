@@ -2,8 +2,10 @@
 import pandas as pd
 from bs4 import BeautifulSoup
 import requests as rq
+import json
 from time import sleep
 from random import randint
+
 '''
 # test
 url = "https://www.imdb.com/title/tt0368343"
@@ -13,8 +15,13 @@ response = rq.get(url, headers = headers)
 html_soup = BeautifulSoup(response.text, 'html.parser')
 film_year = html_soup.find('li', attrs = {"data-testid":"title-details-releasedate"})
 film_year = film_year.find("a", class_ = "ipc-metadata-list-item__list-content-item ipc-metadata-list-item__list-content-item--link")
+
 # print(film_year)
 film_year= film_year.text
+film_year = film_year.rpartition(',')[2]
+film_year = film_year.rpartition('(')[0]
+film_year = film_year.strip()
+
 print(film_year)
 
 genres_container = html_soup.find("div", attrs = {"data-testid":"genres"})
@@ -40,7 +47,18 @@ temp_locs = []
 film_loc = film_loc.find("a", class_= "ipc-metadata-list-item__list-content-item ipc-metadata-list-item__list-content-item--link")
 film_loc = film_loc.text
 print(film_loc)
+
+dic1 = {"index": {"_index": "movies", "_type": "film", "_id":"0\\n"}}
+dic2 = {"film_year":film_year, "genres":temp_genres, "actors":temp_actors, "location":film_loc}
+
+with open("test.json", 'a') as f:
+    json.dump(dic1, f)
+    f.write('\n')
+    json.dump(dic2, f)
 '''
+
+
+
 
 
 # pandas options
@@ -52,7 +70,7 @@ pd.set_option('display.max_colwidth', -1)
 # read excel file
 data = pd.read_excel("data.xlsx")
 # print(data.head(10))
-data = data[['imdbId', 'Imdb Link', 'Title', 'Poster']]
+data = data[['imdbId', 'Imdb Link', 'Title']]
 test_data = data.head(10)
 # print(test_data)
 
@@ -65,6 +83,7 @@ data.drop_duplicates(inplace=True)
 url_list = data['Imdb Link'].tolist()
 # print(url_list)
 id_list = data['imdbId'].tolist()
+title_list = data['Title'].tolist()
 
 # Lists to store scrapped data
 
@@ -81,14 +100,16 @@ headers = {"Accept-Languaje": "en-US, en;q=0.5"}
 # Tambien tenemos que ver el status code de las peticiones
 
 i = 0
+index_id = 0
 for url in url_list:
 
     id = id_list[i]
+    title = title_list[i]
+    title = title.rpartition('(')[0]
+    title = title.strip()
 
     # print(i,"  ",url)
     # print(id)
-
-
 
     # recorremos todas las url
     response = rq.get(url, headers=headers)
@@ -110,8 +131,11 @@ for url in url_list:
     film_year = page_html.find('li', attrs = {"data-testid":"title-details-releasedate"})
     film_year = film_year.find("a", class_ = "ipc-metadata-list-item__list-content-item ipc-metadata-list-item__list-content-item--link")
     film_year = film_year.text
+    film_year = film_year.rpartition(',')[2]
+    film_year = film_year.rpartition('(')[0]
+    film_year = film_year.strip()
     
-    production_year.append(film_year)
+    # production_year.append(film_year)
 
     # scrape the genres
     # class_="ipc-chip-list GenresAndPlot__OffsetChipList-cum89p-5 dMcpOf"
@@ -120,14 +144,14 @@ for url in url_list:
     for genre in film_genres:
         temp_genres.append(genre.text)
     
-    genres.append(temp_genres)
+    # genres.append(temp_genres)
 
     # scrape the actors
     film_actors = page_html.find_all("a", attrs ={"data-testid":"title-cast-item__actor"})
     for actor in film_actors:
         temp_actors.append(actor.text)
-    
-    actors.append(temp_actors)
+    print(temp_actors)
+    # actors.append(temp_actors)
 
     # scrape the locations
     film_loc = page_html.find("li", attrs={"data-testid": "title-details-filminglocations"})
@@ -139,8 +163,19 @@ for url in url_list:
     else:
         film_loc = "unknown"
         
-    locations.append(film_loc)
-    imdb_id.append(id)
+    # locations.append(film_loc)
+    # imdb_id.append(id)
+    dic_1 = {"index": {"_index": "movies", "_type": "film", "_id":index_id}}
+    dic_2 = {"imdb_id":id, "title":title, "film_year":film_year, "genres": temp_genres, "actors": temp_actors, "location":film_loc}
+
+    with open("movies.json", 'a', encoding = 'UTF-8') as f:
+        json.dump(dic_1, f)
+        f.write('\n')
+        json.dump(dic_2, f)
+        f.write('\n')
+        f.close()
+
+    index_id = index_id + 1
 
     # test con 10 links
     if i == 10:
@@ -148,23 +183,23 @@ for url in url_list:
         break
 
 # we use the column imdb link to join both df
-scrapped_data = pd.DataFrame({'imdbId': imdb_id,
+'''scrapped_data = pd.DataFrame({'imdbId': imdb_id,
                              'production_year': production_year,
                              'genres': genres,
                              'actors': actors,
                              'filming_locations': locations
-                             })
+                             })'''
 
-print(scrapped_data)
-print(test_data)
+#print(scrapped_data)
+#print(test_data)
 
 # join the two dataframes
-cleaned_data = pd.merge(scrapped_data, test_data, on='imdbId', how='inner')
-print(cleaned_data)
+# cleaned_data = pd.merge(scrapped_data, test_data, on='imdbId', how='inner')
+# print(cleaned_data)
 # print(cleaned_data.info())
 # print(data.info())
 # cleaned_data.to_json(path_or_buf="imdb.json",
-                     # orient = "records")
+                      # orient = "records")
 
 
 
