@@ -69,30 +69,23 @@ pd.set_option('display.max_colwidth', -1)
 
 # read excel file
 data = pd.read_excel("data.xlsx")
-# print(data.head(10))
+
 data = data[['imdbId', 'Imdb Link', 'Title', 'Genre']]
 test_data = data.head(10)
-# print(test_data)
 
-# print(data.shape)
 # drop duplicated rows
 data.drop_duplicates(inplace=True)
-# print(data.shape)
+
 
 # List of url
 url_list = data['Imdb Link'].tolist()
-# print(url_list)
 id_list = data['imdbId'].tolist()
 title_list = data['Title'].tolist()
 genre_list = data['Genre'].tolist()
 
 index = url_list.index('http://www.imdb.com/title/tt0466909')
-# print(index)
 
-index2 = id_list.index(466909)
-# print(index2)
 # Lists to store scrapped data
-
 imdb_id = []
 production_year = []
 genres = []
@@ -101,9 +94,6 @@ locations = []
 
 # queremos obtener los campos en ingles
 headers = {"Accept-Languaje": "en-US, en;q=0.5"}
-
-# En primer lugar, tendremos que controlar la tasa de crawl para que no veten nuestra IP
-# Tambien tenemos que ver el status code de las peticiones
 
 i = 0
 index_id = 0
@@ -157,10 +147,10 @@ for url in url_list:
     else:
         film_year = film_year_excel
     
-    # production_year.append(film_year)
+
 
     # scrape the genres
-    # class_="ipc-chip-list GenresAndPlot__OffsetChipList-cum89p-5 dMcpOf"
+
     genres_container = page_html.find('div', attrs = {"data-testid":"genres"})
     if genres_container is not None:
         film_genres = genres_container.find_all(class_='ipc-chip__text')
@@ -168,14 +158,14 @@ for url in url_list:
             temp_genres.append(genre.text)
     else:
         temp_genres = genre.copy()
-    # genres.append(temp_genres)
+
 
     # scrape the actors
     film_actors = page_html.find_all("a", attrs ={"data-testid":"title-cast-item__actor"})
     for actor in film_actors:
         temp_actors.append(actor.text)
 
-    # actors.append(temp_actors)
+
 
     # scrape the locations
     film_loc = page_html.find("li", attrs={"data-testid": "title-details-filminglocations"})
@@ -187,8 +177,7 @@ for url in url_list:
     else:
         film_loc = "unknown"
         
-    # locations.append(film_loc)
-    # imdb_id.append(id)
+
     dic_1 = {"index": {"_index": "movies", "_type": "film", "_id":index_id}}
     dic_2 = {"imdb_id":id, "title":title, "film_year":film_year, "genres": temp_genres, "actors": temp_actors, "location":film_loc}
 
@@ -204,24 +193,7 @@ for url in url_list:
 
 
 
-# we use the column imdb link to join both df
-scrapped_data = pd.DataFrame({'imdbId': imdb_id,
-                             'production_year': production_year,
-                             'genres': genres,
-                             'actors': actors,
-                             'filming_locations': locations
-                             })
 
-#print(scrapped_data)
-#print(test_data)
-
-# join the two dataframes
-# cleaned_data = pd.merge(scrapped_data, test_data, on='imdbId', how='inner')
-# print(cleaned_data)
-# print(cleaned_data.info())
-# print(data.info())
-# cleaned_data.to_json(path_or_buf="imdb.json",
-                      # orient = "records")
 
 
 
